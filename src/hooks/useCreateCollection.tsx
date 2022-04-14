@@ -25,42 +25,20 @@ function useCreateCollection(): [uploadFile, create] {
       return false;
     }
     try {
-      const contentType = "application/json"; // type of file
-      // setup params for putObject
-      const key = name + "/";
-      const payload = {
-        key,
-        contentType,
-      };
-
-      const resp = await axios.post("/api/upload", payload);
-      const response = await axios.get("/api/aws");
-
-      if (response.status !== 200) return false;
-      const [s3Bucket, region] = response.data;
-      console.log(response.data);
       const web3Provider = await Moralis.enableWeb3();
       const signer = await web3Provider.getSigner();
       const address = await Moralis.account;
-      const url =
-        "https://" +
-        s3Bucket +
-        ".s3." +
-        region +
-        ".amazonaws.com/" +
-        name.replace(" ", "+") +
-        "/";
+
+      console.log(signer);
       const tokenContract = new ethers.ContractFactory(
         NFT.abi,
         NFT.bytecode,
         signer
       );
-      const nft = await tokenContract.deploy(
-        url + "{id}.json",
-        marketAddress,
-        fee,
-        address
-      );
+      console.log(marketAddress);
+      console.log(fee);
+      console.log(address);
+      const nft = await tokenContract.deploy(marketAddress, fee, address);
       await nft.deployed();
       console.log("nft deployed to:", nft.address);
 
@@ -71,7 +49,6 @@ function useCreateCollection(): [uploadFile, create] {
       collection.save({
         name: name,
         collectionAddress: nft.address,
-        s3: url,
         owner: address,
         imgUrl: imgUrl,
         description: description,

@@ -147,9 +147,9 @@ function CreatorsDashboard() {
                 ) : (
                   <div className="flex w-full mx-auto justify-content-center mt-8">
                     <div className="mx-auto text-center">
-                      <p className="text-4xl font-bold">
-                        <div>You Have No NFTs On This Colleciton</div>
-                      </p>
+                      <div className="text-4xl font-bold">
+                        <p>You Have No NFTs On This Colleciton</p>
+                      </div>
                     </div>
                   </div>
                 )}

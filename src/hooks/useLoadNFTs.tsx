@@ -3,6 +3,7 @@ import axios from "axios";
 import useFetchCollection from "./useFetchCollection";
 import { useCallback, useMemo, useState } from "react";
 import Moralis from "moralis/types";
+import NFT from "../../artifacts/contracts/NFT.sol/NFT.json";
 
 interface metadata {
   address: string;
@@ -18,7 +19,8 @@ interface metadata {
 function useLoadNFTs() {
   const Web3Api = useMoralisWeb3Api();
   const [, fetch] = useFetchCollection();
-  const { isAuthenticated, Moralis, chainId } = useMoralis();
+  const { isAuthenticated, Moralis, chainId, web3, isWeb3Enabled } =
+    useMoralis();
 
   const fetchNFTs = async (): Promise<
     | [metadata[], Moralis.Object<Moralis.Attributes>[], boolean]
@@ -43,12 +45,32 @@ function useLoadNFTs() {
     });
 
     const nftsMeta: metadata[] = [];
+    const fetchTokenuri = async (address: string, token_id: string) => {
+      console.log(address);
+      if (!web3) return;
+      const ethers = Moralis.web3Library;
+      const signer = web3.getSigner();
+      console.log(token_id);
+      const tokenContract = new ethers.Contract(
+        address,
+        NFT.abi,
+        signer.provider
+      );
+      const url = await tokenContract.uri(token_id);
+      console.log(url);
+      return url;
+    };
     await Promise.all(
       userNFTsCollections.map(async (nft) => {
         if (!nft.token_uri) return;
         try {
           console.log(nft.token_uri);
-          const metadata = await axios.get(nft.token_uri);
+          const token_uri = await fetchTokenuri(
+            nft.token_address,
+            nft.token_id
+          );
+          console.log(token_uri);
+          const metadata = await axios.get(token_uri);
           metadata.data.collection = addressDic
             ? addressDic[nft.token_address]
             : "";

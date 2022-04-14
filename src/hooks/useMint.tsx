@@ -1,7 +1,6 @@
 import { useMoralis } from "react-moralis";
-import { putObject } from "../../lib/s3";
+import useIPFS from "./useIPFS";
 import NFT from "../../artifacts/contracts/NFT.sol/NFT.json";
-import axios from "axios";
 
 type uploadFile = (e: File) => Promise<string>;
 interface props {
@@ -15,7 +14,7 @@ interface props {
 type create = (props: props) => Promise<boolean | undefined>;
 function useCreateCollection(): [uploadFile, create] {
   const { isAuthenticated, Moralis, authenticate } = useMoralis();
-
+  const upload = useIPFS();
   const mint: create = async (props) => {
     const ethers = Moralis.web3Library;
 
@@ -29,40 +28,31 @@ function useCreateCollection(): [uploadFile, create] {
 
     const currentId = {
       contractAddress: address,
-      functionName: "currentId",
+      functionName: "getFee",
       abi: NFT.abi,
     };
-    const [_tokenId, _fee] = (await Moralis.executeFunction(currentId)) as any;
+    const _fee = await Moralis.executeFunction(currentId);
 
-    let tokenId = parseInt(_tokenId.toString(), 10) + 1;
-    let fee = parseInt(_fee.toString(), 10);
-
+    const data = JSON.stringify({
+      name,
+      description,
+      image: imgUrl,
+      fee: _fee.toString(),
+    });
+    const token_id_hash = await upload(data);
+    const token_id_bigNumber = ethers.BigNumber.from(token_id_hash.toString());
     const mint = {
       contractAddress: address,
       functionName: "mint",
       abi: NFT.abi,
       params: {
         reciever: Moralis.account,
+        id: token_id_bigNumber,
       },
     };
     try {
       const tokenHash: any = await Moralis.executeFunction(mint);
 
-      if (tokenHash) {
-        const contentType = "application/json"; // type of file
-        const data = JSON.stringify({ name, description, image: imgUrl, fee });
-        const tokenIdString = tokenId.toString().padStart(64, "0");
-        // setup params for putObject
-        const key = collectionName + "/" + tokenIdString + ".json";
-        const body = data;
-        const payload = {
-          key,
-          body,
-          contentType,
-        };
-
-        const resp = await axios.post("/api/upload", payload);
-      }
       await tokenHash.wait();
       callback();
       return true;
