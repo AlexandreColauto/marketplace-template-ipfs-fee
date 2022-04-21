@@ -70,16 +70,27 @@ const useFetchMarket = (): [fetchItems, filterNFTs] => {
   ) {
     return await Promise.all(
       nftsMeta.map(async (nft) => {
-        const nftURI = collectionsURI[nft.collectionAddress];
-        const tokenIdString = nft.tokenId.toString().padStart(64, "0");
-        const uri = nftURI?.replace("{id}", tokenIdString);
-        const _metadata = await axios.get(uri);
-        const metadata: metadata = _metadata.data;
-        metadata.id = nft.tokenId;
-        metadata.price = Moralis.Units.FromWei(nft.price);
-        metadata.marketId = parseInt(nft.itemId);
-        metadata.address = nft.collectionAddress;
-        return metadata;
+        const uri = collectionsURI[nft.collectionAddress];
+        console.log(uri);
+        try {
+          const _metadata = await axios.get(uri);
+          const metadata: metadata = _metadata.data;
+          metadata.id = nft.tokenId;
+          metadata.price = Moralis.Units.FromWei(nft.price);
+          metadata.marketId = parseInt(nft.itemId);
+          metadata.address = nft.collectionAddress;
+          return metadata;
+        } catch (error: any) {
+          console.log(error.message);
+          const dataPlaceHolder = {
+            address: nft.collectionAddress,
+            id: nft.tokenId,
+            description: "Not Available",
+            image: "/logo.png",
+            name: "Not Available",
+          };
+          return dataPlaceHolder;
+        }
       })
     );
   }

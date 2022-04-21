@@ -43,7 +43,9 @@ function useLoadNFTs() {
     const userNFTsCollections = _userNFTsCollections.result.filter((nft) => {
       return Object.keys(addressDic).includes(nft.token_address.toLowerCase());
     });
-
+    console.log(_userNFTsCollections);
+    console.log(userNFTsCollections);
+    console.log(addressDic);
     const nftsMeta: metadata[] = [];
     const fetchTokenuri = async (address: string, token_id: string) => {
       console.log(address);
@@ -64,20 +66,21 @@ function useLoadNFTs() {
       userNFTsCollections.map(async (nft) => {
         if (!nft.token_uri) return;
         try {
-          console.log(nft.token_uri);
           const token_uri = await fetchTokenuri(
             nft.token_address,
             nft.token_id
           );
-          console.log(token_uri);
           const metadata = await axios.get(token_uri);
+          //const metadata = JSON.parse(_metadata);
+          console.log(metadata);
           metadata.data.collection = addressDic
             ? addressDic[nft.token_address]
             : "";
           metadata.data.address = nft.token_address;
           metadata.data.id = nft.token_id;
           nftsMeta.push(metadata.data);
-        } catch (err) {
+        } catch (err: any) {
+          console.log(err.message);
           const dataPlaceHolder = {
             address: nft.token_address,
             id: nft.token_id,
@@ -85,6 +88,7 @@ function useLoadNFTs() {
             image: "/logo.png",
             name: "Not Available",
           };
+          return dataPlaceHolder;
         }
       })
     );

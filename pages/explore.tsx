@@ -10,6 +10,7 @@ import Link from "next/link";
 import ToastSucess from "../src/components/ToastSucess";
 import ToastError from "../src/components/ToastError";
 import Processing from "../src/components/Processing";
+import customCollections from "../customCollections.json";
 
 interface marketItms {
   collectionAddress: string;
@@ -72,6 +73,7 @@ function Explore() {
     if (!isWeb3Enabled) return;
     const [_collections] = await fetchAll();
     if (!_collections) return;
+    console.log(_collections);
     setCollectionList(_collections);
   };
 
@@ -143,6 +145,10 @@ function Explore() {
           }}
         >
           <option>All Collections</option>
+          {customCollections &&
+            customCollections.map((collection, index: any) => (
+              <option value={collection.address}>{collection.name}</option>
+            ))}
           {filteredcollectionList.map((collection, i) => (
             <option key={i} value={collection.get("collectionAddress")}>
               {collection.get("name")}

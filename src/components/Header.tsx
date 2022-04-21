@@ -16,13 +16,23 @@ const Header: NextPage = () => {
     enableWeb3,
     web3,
   } = useMoralis();
+  const [networkMsg, setNetworkMsg] = useState(false);
 
   useEffect(() => {
     tryWeb3();
   }, [isAuthenticated]);
 
+  useEffect(() => {
+    const unsubscribe = Moralis.onChainChanged((chain: any) => {
+      console.log(chain);
+      verifyNetwork();
+    });
+    return unsubscribe;
+  }, []);
+
   const tryWeb3 = () => {
     !isWeb3Enabled && isAuthenticated ? enableWeb3() : null;
+    verifyNetwork();
   };
   async function login() {
     tryWeb3();
@@ -32,6 +42,45 @@ const Header: NextPage = () => {
       });
     }
   }
+
+  async function verifyNetwork() {
+    const chainIdDec = await Moralis.chainId;
+    console.log(chainIdDec);
+    if (chainIdDec !== "0x38") {
+      console.log(chainIdDec);
+      setNetworkMsg(true);
+    } else {
+      setNetworkMsg(false);
+    }
+  }
+
+  const changeNetwork = async () => {
+    try {
+      await Moralis.switchNetwork("0x38");
+    } catch (error: any) {
+      if (error.code === 4902) {
+        try {
+          const chainId = "0x38";
+          const chainName = "BSC Smart Chain";
+          const currencyName = "BNB";
+          const currencySymbol = "BNB";
+          const rpcUrl = "https://bsc-dataseed.binance.org/";
+          const blockExplorerUrl = "https://bscscan.com";
+
+          await Moralis.addNetwork(
+            chainId,
+            chainName,
+            currencyName,
+            currencySymbol,
+            rpcUrl,
+            blockExplorerUrl
+          );
+        } catch (error: any) {
+          console.log(error.message);
+        }
+      }
+    }
+  };
 
   return (
     <div>
@@ -52,6 +101,25 @@ const Header: NextPage = () => {
         aria-label="main navigation"
         style={{ boxShadow: "0px 15px 30px rgba(62, 19, 77, 0.09)" }}
       >
+        {networkMsg && (
+          <div className=" flex w-full">
+            <div className="mx-auto bg-red-500 rounded-xl px-2 text-white bg-opacity-40 justify-content-center flex mb-0">
+              <button
+                className="delete"
+                onClick={() => setNetworkMsg(false)}
+              ></button>
+              <button
+                onClick={() => changeNetwork()}
+                className="button is-warning"
+              >
+                <p className="title is-5">
+                  Look&apos;s like you are in a different network than BSC
+                  Mainnet, click here and let me change for you.🤗
+                </p>{" "}
+              </button>
+            </div>
+          </div>
+        )}
         <div className=" mr-10"></div>
         <div className="flow-root">
           <div className="float-left">

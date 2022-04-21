@@ -190,7 +190,7 @@ const Mint = () => {
           </div>
         </div>
       </div>
-      <Processing isOpen={processing} />
+      {/* <Processing isOpen={processing} /> */}
 
       {isSuccess && <ToastSucess isOpen={true} toggle={setIsSuccess} />}
       {isError && <ToastError isOpen={true} toggle={setisError} />}

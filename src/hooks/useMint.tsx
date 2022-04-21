@@ -21,8 +21,8 @@ function useCreateCollection(): [uploadFile, create] {
     const { name, description, imgUrl, callback, address, collectionName } =
       props;
     if (!name || !imgUrl) {
-      //alert("Fill the required Information before minting.");
-      //return false;
+      alert("Fill the required Information before minting.");
+      return false;
     }
     if (!isAuthenticated) authenticate();
 
@@ -33,13 +33,14 @@ function useCreateCollection(): [uploadFile, create] {
     };
     const _fee = await Moralis.executeFunction(currentId);
 
-    const data = JSON.stringify({
+    const data = {
       name,
       description,
       image: imgUrl,
       fee: _fee.toString(),
-    });
+    };
     const token_id_hash = await upload(data);
+    if (!token_id_hash) return false;
     const token_id_bigNumber = ethers.BigNumber.from(token_id_hash.toString());
     const mint = {
       contractAddress: address,
